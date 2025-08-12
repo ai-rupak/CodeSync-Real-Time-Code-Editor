@@ -4,6 +4,7 @@ import Editor from "@monaco-editor/react";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 import { defaultVersions } from "../constants";
+import EditorPageWithSkeleton from "./EditorPageWithSkeleton";
 
 const EditorPage = () => {
   const { roomId } = useParams();
@@ -20,18 +21,31 @@ const EditorPage = () => {
   const [userInput, setUserInput]  = useState("")
   const [running, setIsRunning]  = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const username = location.state?.username || `Guest_${Math.random().toString(36).slice(2, 8)}`;
 
   useEffect(() => {
     // connect
-    socketRef.current = io(SERVER_URL);
+    const initializeConnection = async () => {
+    try {
+      // connect
+      socketRef.current = io(SERVER_URL);
 
-    socketRef.current.on("connect", () => {
-      console.log("connected to socket server", socketRef.current.id);
-      // join the room with username
-      socketRef.current.emit("join", { roomId, userName: username });
-    });
+      socketRef.current.on("connect", () => {
+        console.log("connected to socket server", socketRef.current.id);
+        socketRef.current.emit("join", { roomId, userName: username });
+        
+        // Hide loading after successful connection
+        setTimeout(() => setLoading(false), 1000); // Add small delay for smooth transition
+      });
+      } catch (error) {
+      console.error("Connection error:", error);
+      setLoading(false);
+    }
+  };
+
+    initializeConnection();
 
     // when server sends updated user list
     socketRef.current.on("userJoined", (userList) => {
@@ -117,6 +131,9 @@ const runCode = () => {
       input:userInput,
     });
   };
+  if(loading){
+    return <EditorPageWithSkeleton/>
+  }
 
   return (
      <div className="h-screen bg-gray-900 text-white overflow-hidden font-mono">
@@ -132,7 +149,7 @@ const runCode = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <h1 className="text-2xl font-bold text-white">
+            <h1 className="lg:text-2xl font-bold text-white text-xl ">
               Code Sync
             </h1>
             <div className="hidden md:flex items-center gap-2 text-sm">
@@ -158,7 +175,7 @@ const runCode = () => {
             <button
               onClick={runCode}
               disabled={running}
-              className="bg-green-600 hover:bg-green-700 disabled:opacity-50 px-4 py-1.5 rounded-lg text-sm font-medium transition-colors"
+              className="bg-green-600 hover:bg-green-700 disabled:opacity-50 px-4 py-1.5 rounded-lg text-sm font-medium transition-colors h-9 flex items-center"
             >
               {running ? "Running..." : "▶ Run"}
             </button>
