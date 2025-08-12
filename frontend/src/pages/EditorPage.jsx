@@ -17,7 +17,7 @@ const EditorPage = () => {
   const [typing, setTyping] = useState("");
   const [code, setCode] = useState("// start code here");
   const [output, setOutput] = useState("");
-  const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:5000";
+  const SERVER_URL = import.meta.env.VITE_SERVER_URL || "https://codesync-real-time-code-editor.onrender.com";
   const [userInput, setUserInput]  = useState("")
   const [running, setIsRunning]  = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
